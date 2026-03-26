@@ -52,3 +52,21 @@ Not Implemented yet (timing TBD)
 ### behavior=slide + direction=right
 Known Issue (fix planned).
 
+## Version History
+### exp.17
+The process for detecting changes in the content area size was simplified and verbose process removed.
+
+### exp.16 (release-skipped)
+switched over to "transform: translateX" from "left" (GPU Rendering)
+
+### exp.15 (release-skipped)
+Fixed Line-break bug
+
+### exp.14
+First Released Version.
+
+### ~exp.13 (skipped)
+Skipped. Development Version
+
+
+
