@@ -1,6 +1,6 @@
 /**
- * Neues-Marquee exp-14
- * March 15, 2026 Version
+ * Neues-Marquee exp-17
+ * March 26, 2026 Version
  * 
  * @author yumezato-stt
  * @description The marquee polyfill for modern browser. 
@@ -70,6 +70,7 @@ class HTMLNeuesMarqueeElement extends HTMLElement {
                 display: block;
                 inline-size: fit-content;
                 animation-fill-mode: forwards;
+                white-space: nowrap;
             }
             .marqueemodern_content_vertical {
                 position: absolute !important;
@@ -87,10 +88,9 @@ class HTMLNeuesMarqueeElement extends HTMLElement {
         contentdiv.appendChild(contentslot);
         shadowRoot.appendChild(contentdiv);
         this.shadowcontentdiv = contentdiv;
-        this.mutationobserverconfig = {attributes: false, childList: true, subtree: true};
-        this.mutationobserver = new MutationObserver(this.marquee_mutationobservercallback);
         this.resizeobserverconfig = {};
         this.resizeobserver = new ResizeObserver(this.marquee_resizeobservercallback);
+        this.contentresizeobserver = new ResizeObserver(this.marquee_contentresizeobservercallback)
     }
     horizontal_vertical = (direction) => {
         switch(direction) {
@@ -115,60 +115,60 @@ class HTMLNeuesMarqueeElement extends HTMLElement {
         "scroll": {
             "horizontal": [
                 {
-                    left: "calc(var(--container-width) * 1px)"
+                    transform: "translateX(calc(var(--container-width) * 1px))"
                 },
                 {
-                    left: "calc(0px - var(--content-width) * 1px)"
+                    transform: "translateX(calc(0px - var(--content-width) * 1px))"
                 }
             ],
             "vertical": [
                 {
-                    top: "calc(var(--container-height) * 1px)"
+                    transform: "translateY(calc(var(--container-height) * 1px))"
                 },
                 {
-                    top: "calc(0px - var(--content-height) * 1px)"
+                    transform: "translateY(calc(0px - var(--content-height) * 1px))"
                 }
             ]
         },
         "alternate": {
             "horizontal": [
                 {
-                    left: "calc(var(--container-width) * 1px - var(--content-width) * 1px)"
+                    transform: "translateX(calc(var(--container-width) * 1px - var(--content-width) * 1px))"
                 },
                 {
-                    left: "0px"
+                    transform: "translateX(0px)"
                 },
                 {
-                    left: "calc(var(--container-width) * 1px - var(--content-width) * 1px)"
+                    transform: "translateX(calc(var(--container-width) * 1px - var(--content-width) * 1px))"
                 }
             ],
             "vertical": [
                 {
-                    top: "calc(var(--container-height) * 1px - var(--content-height) * 1px)"
+                    transform: "translateY(calc(var(--container-height) * 1px - var(--content-height) * 1px))"
                 },
                 {
-                    top: "0px"
+                    transform: "translateY(0px)"
                 },
                 {
-                    top: "calc(var(--container-height) * 1px - var(--content-height) * 1px)"
+                    transform: "translateY(calc(var(--container-height) * 1px - var(--content-height) * 1px))"
                 }
             ]
         },
         "slide": {
             "left": [
                 {
-                    left: "calc(var(--container-width) * 1px)"
+                    transform: "translateX(calc(var(--container-width) * 1px))"
                 },
                 {
-                    left: "0px"
+                    transform: "translateX(0px)"
                 }
             ],
             "right": [
                 {
-                    left: "calc(0px - var(--content-width) * 1px)"
+                    transform: "translateX(calc(0px - var(--content-width) * 1px))"
                 },
                 {
-                    left: "calc(var(--container-width) * 1px - var(--content-width) * 1px)"
+                    transform: "translateX(calc(var(--container-width) * 1px - var(--content-width) * 1px))"
                 }
             ]
         }
@@ -295,8 +295,10 @@ class HTMLNeuesMarqueeElement extends HTMLElement {
     }
     connectedCallback() {
         this.marqueecontent_set();
-        this.mutationobserver.observe(this, this.mutationobserverconfig);
+        console.debug("[marquee/connectedCallback]", this);
         this.resizeobserver.observe(this, this.resizeobserverconfig);
+        this.contentresizeobserver.observe(this.shadowcontentdiv, this.resizeobserverconfig);
+        console.debug("[marquee/connectedCallback] Observer Started", this, this.mutationobserver, this.res);
     }
     disconnectedCallback() {
         this.mutationobserver.disconnect();
@@ -395,8 +397,7 @@ class HTMLNeuesMarqueeElement extends HTMLElement {
         this.marqueecontent_applySize(horizontal_vertical == "horizontal"? newtimeh : newtimev);
         console.debug("[marqueecontent_applySize_p2] done", this); //Debug Message (-marqueejs)
     }
-    marquee_mutationobservercallback = (mutationList, observer) => {
-        console.debug("[marquee_mutationobservercallback]", mutationList, observer); //Debug Message (-marqueejs)
+    marquee_applySize_ContentChanged = () => {
         var horizontal_vertical = this.horizontal_vertical(this.direction);
         if (this.behavior == "scroll") {
             console.debug("[marquee_mutationobservercallback] scroll / alternate", this); //Debug Message (-marqueejs)
@@ -429,9 +430,15 @@ class HTMLNeuesMarqueeElement extends HTMLElement {
             }            
         }
     }
+    marquee_contentresizeobservercallback = () => {
+        this.marquee_applySize_ContentChanged();
+    }
     marquee_resizeobservercallback = (entries) => {
         console.debug("[marqueecontent_resizeobservercallback]", this); //Debug Message (-marqueejs)
         console.debug("[marqueecontent_resizeobservercallback]", entries); //Debug Message (-marqueejs)
+        entries.forEach((value) => {
+            console.debug(value);
+        })
         this.marqueesize = this.getBoundingClientRect();
         this.marqueecontent_applySize();
         console.debug("[marqueecontent_resizeobservercallback] end", this); //Debug Message (-marqueejs)
